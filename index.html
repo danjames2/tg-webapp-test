@@ -43,3 +43,48 @@
   <p id="status"></p>
 
   <script>
+    document.getElementById('telegramForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const form = e.target;
+      const data = new FormData(form);
+      const userData = Object.fromEntries(data);
+
+      // Собираем текст сообщения
+      const messageText = `
+📧 Получена новая форма:
+
+👤 Имя: ${userData.name}
+✉️ Email: ${userData.email}
+💬 Сообщение: ${userData.message}
+`;
+
+      // Отправляем через Telegram Bot API
+      try {
+        const response = await fetch(`https://api.telegram.org/bot8029087587 :AAFgw827hRvzNtmakLBtfNZx1ZJTd4vRY3Q/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            chat_id: 'CHAT_ID_ЗДЕСЬ', // ← ЗАМЕНИТЬ НА ТВОЙ chat_id
+            text: messageText,
+            parse_mode: 'Markdown'
+          })
+        });
+
+        const result = await response.json();
+        if (result.ok) {
+          document.getElementById('status').textContent = '✅ Данные успешно отправлены!';
+        } else {
+          document.getElementById('status').textContent = '❌ Ошибка при отправке.';
+          console.error(result);
+        }
+      } catch (err) {
+        document.getElementById('status').textContent = '⚠️ Не удалось подключиться к Telegram.';
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
