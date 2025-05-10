@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <body>
-  <button onclick="Telegram.WebApp.sendData('{\"force_test\":1}')">
-    TEST SEND
-  </button>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <button onclick="
+    Telegram.WebApp.sendData('{\"force_test\":1}');
+    Telegram.WebApp.close();
+  ">TEST SEND</button>
 </body>
 </html>
