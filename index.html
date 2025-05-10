@@ -1,7 +1,35 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <meta charset="UTF-8">
+    <title>Форма для бота</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .hidden { display: none; }
+        #testButton { background: #f00; color: white; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
 <body>
-<button onclick="Telegram.WebApp.sendData('test')">TEST</button>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <div id="debugInfo" style="color:red; padding:10px; border:1px solid red; margin:10px 0;"></div>
+	<br>
+	<br><br>
+	<br><br><br><br><br><br>
+    <div id="formContainer">
+        <form id="dataForm">
+            <input type="text" id="userName" placeholder="Имя" required>
+            <input type="email" id="userEmail" placeholder="Email" required>
+            <textarea id="userMessage" placeholder="Сообщение" required></textarea>
+            <button type="submit">Отправить</button>
+        </form>
+    </div>
+    
+    <div id="successContainer" class="hidden">
+        <h2>✅ Данные отправлены!</h2>
+        <p>Закройте это окно или подождите...</p>
+    </div>
+    <button id="testButton">ТЕСТ: Отправить "123"</button>
+    <script src="app.js"></script>
 </body>
 </html>
