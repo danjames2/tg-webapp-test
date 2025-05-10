@@ -1,56 +1,206 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>WebApp Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма для бота</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #testBtn { 
-            padding: 15px; 
-            background: #0088cc; 
-            color: white; 
-            border: none; 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #0088cc;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
             border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0077b3;
+        }
+        .hidden {
+            display: none;
+        }
+        #success-message {
+            text-align: center;
+            color: #4CAF50;
             font-size: 18px;
+            margin-top: 20px;
+        }
+        #debug-info {
+            color: red;
+            padding: 10px;
+            border: 1px solid red;
+            margin: 10px 0;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-    <button id="testBtn">ОТПРАВИТЬ ТЕСТОВЫЕ ДАННЫЕ</button>
+    <div class="container">
+        <h1>Форма обратной связи</h1>
+        
+        <div id="debug-info"></div>
+        
+        <div id="form-container">
+            <form id="form">
+                <div class="form-group">
+                    <label for="name">Ваше имя:</label>
+                    <input type="text" id="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Ваш Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Ваше сообщение:</label>
+                    <textarea id="message" required></textarea>
+                </div>
+                
+                <button type="submit">Отправить</button>
+            </form>
+        </div>
+        
+        <div id="success-message" class="hidden">
+            <h2>✅ Спасибо!</h2>
+            <p>Ваши данные успешно отправлены.</p>
+            <p>Окно закроется автоматически...</p>
+        </div>
+    </div>
 
     <script>
-        // Инициализация
+        // Инициализация Telegram WebApp
         const tg = Telegram.WebApp;
         tg.expand();
         tg.enableClosingConfirmation();
-
-        // Тестовая отправка
-        document.getElementById('testBtn').addEventListener('click', () => {
-            const testData = {
-                _test: true,
-                timestamp: Date.now(),
-                user_id: tg.initDataUnsafe.user?.id,
-                platform: tg.platform
-            };
-
+        
+        // Элементы интерфейса
+        const form = document.getElementById('form');
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+        const debugInfo = document.getElementById('debug-info');
+        
+        // Функция для вывода отладочной информации
+        function logDebug(message) {
+            debugInfo.innerHTML += `${new Date().toLocaleTimeString()}: ${message}<br>`;
+            console.log(message);
+        }
+        
+        // Проверка инициализации WebApp
+        if (!window.Telegram || !Telegram.WebApp) {
+            logDebug('ОШИБКА: Telegram WebApp не загружен!');
+        } else {
+            logDebug(`WebApp инициализирован. Платформа: ${tg.platform}, версия: ${tg.version}`);
+            logDebug(`Пользователь: ${JSON.stringify(tg.initDataUnsafe.user)}`);
+        }
+        
+        // Функция отправки данных
+        async function sendFormData(formData) {
+            // 1. Основной метод (для всех платформ)
             try {
-                // Основной метод
-                tg.sendData(JSON.stringify(testData));
-                
-                // Резервный метод
-                fetch(`https://api.telegram.org/bot8029087587:AAFgw827hRvzNtmakLBtfNZx1ZJTd4vRY3Q/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        chat_id: tg.initDataUnsafe.user?.id,
-                        text: `Резервная отправка:\n${JSON.stringify(testData, null, 2)}`
-                    })
-                });
-                
-                alert('Данные отправлены!');
-                tg.close();
+                tg.sendData(JSON.stringify(formData));
+                logDebug('Данные отправлены через sendData()');
+                return true;
             } catch (e) {
-                alert(`Ошибка: ${e.message}`);
+                logDebug(`Ошибка sendData: ${e.message}`);
+            }
+            
+            // 2. Специальная обработка для десктопной версии
+            if (tg.platform === 'tdesktop' || tg.platform === 'macos') {
+                try {
+                    const response = await fetch(
+                        'https://api.telegram.org/bot8029087587:AAFgw827hRvzNtmakLBtfNZx1ZJTd4vRY3Q/sendMessage',
+                        {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                chat_id: tg.initDataUnsafe.user?.id,
+                                text: `Данные с десктопа:\n${JSON.stringify(formData, null, 2)}`
+                            })
+                        }
+                    );
+                    logDebug('Десктоп: данные отправлены через Bot API');
+                    return true;
+                } catch (e) {
+                    logDebug(`Ошибка отправки для десктопа: ${e.message}`);
+                }
+            }
+            
+            // 3. Универсальный резервный метод
+            try {
+                window.location.href = `https://t.me/${tg.initDataUnsafe.user?.username}?start=webapp_${encodeURIComponent(JSON.stringify(formData))}`;
+                return true;
+            } catch (e) {
+                logDebug(`Ошибка универсального метода: ${e.message}`);
+                return false;
+            }
+        }
+        
+        // Обработка отправки формы
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                message: document.getElementById('message').value,
+                platform: tg.platform,
+                timestamp: Date.now()
+            };
+            
+            logDebug(`Отправка данных: ${JSON.stringify(formData)}`);
+            
+            const success = await sendFormData(formData);
+            
+            if (success) {
+                formContainer.style.display = 'none';
+                successMessage.style.display = 'block';
+                setTimeout(() => tg.close(), 1500);
+            } else {
+                alert('Не удалось отправить данные. Попробуйте позже.');
             }
         });
     </script>
