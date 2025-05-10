@@ -1,45 +1,39 @@
-// Проверка инициализации Telegram API
-if (!window.Telegram?.WebApp) {
-    alert('Telegram WebApp API не загружен!');
-    throw new Error('Telegram WebApp not available');
-}
-
 const tg = Telegram.WebApp;
 tg.expand();
 
-// Тестовая функция отправки
-function sendTestData() {
-    const testData = {
-        _test: true,
-        timestamp: Date.now(),
-        user_id: tg.initDataUnsafe.user?.id
-    };
+// Универсальная функция отправки
+function sendToBot(data) {
+    // Для десктопной версии
+    if (tg.platform === 'tdesktop' || tg.platform === 'macos') {
+        window.location.href = `https://t.me/${tg.initDataUnsafe.user?.username}?start=webapp_${encodeURIComponent(JSON.stringify(data))}`;
+        return;
+    }
     
-    console.log('Отправка данных:', testData);
-    
+    // Для мобильных версий
     try {
-        // Основной метод
-        tg.sendData(JSON.stringify(testData));
-        alert('Данные отправлены через sendData()');
-        
+        tg.sendData(JSON.stringify(data));
+    } catch (e) {
         // Резервный метод
         fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 chat_id: tg.initDataUnsafe.user?.id,
-                text: `Резервная отправка: ${JSON.stringify(testData)}`
+                text: `WebApp Data:\n${JSON.stringify(data, null, 2)}`
             })
         });
-    } catch (e) {
-        alert(`Ошибка: ${e.message}`);
-        console.error('Ошибка отправки:', e);
     }
 }
 
-// Добавляем кнопку для теста
-const testBtn = document.createElement('button');
-testBtn.textContent = 'ТЕСТ: Отправить данные';
-testBtn.style.cssText = 'position:fixed; top:10px; right:10px; z-index:9999; padding:10px; background:red; color:white;';
-testBtn.onclick = sendTestData;
-document.body.appendChild(testBtn);
+// Обработчик кнопки
+document.getElementById('testBtn').onclick = () => {
+    const testData = {
+        _test: true,
+        timestamp: Date.now(),
+        platform: tg.platform,
+        version: tg.version
+    };
+    
+    sendToBot(testData);
+    tg.close();
+};
