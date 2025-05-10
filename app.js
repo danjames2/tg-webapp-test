@@ -14,7 +14,7 @@ function sendToBot(data) {
         tg.sendData(JSON.stringify(data));
     } catch (e) {
         // Резервный метод
-        fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
+        fetch(`https://api.telegram.org/bot8029087587:AAFgw827hRvzNtmakLBtfNZx1ZJTd4vRY3Q/sendMessage`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
