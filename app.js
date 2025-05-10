@@ -1,47 +1,43 @@
-// Проверка инициализации
+// Проверяем инициализацию Telegram WebApp
 if (!window.Telegram?.WebApp) {
-    document.body.innerHTML = '<h1 style="color:red">Ошибка: Telegram WebApp не загружен</h1>';
-    throw new Error('Telegram WebApp API недоступен');
+    document.body.innerHTML = '<h1 style="color:red;padding:20px">ERROR: Telegram WebApp API not loaded</h1>';
+    throw new Error('Telegram WebApp not available');
 }
 
 const tg = Telegram.WebApp;
-tg.expand();
+tg.expand(); // Развернуть на весь экран
 
-// Функция отправки с тремя методами
-async function sendData(formData) {
-    // 1. Основной метод
+// Функция отправки данных с тремя уровнями резервирования
+async function sendFormData(formData) {
+    // Метод 1: Основной (через Telegram API)
     try {
         tg.sendData(JSON.stringify(formData));
-        console.log('Данные отправлены через sendData()');
+        console.log('Data sent via sendData()');
         return true;
     } catch (e) {
-        console.warn('Ошибка sendData:', e);
+        console.warn('sendData failed:', e);
     }
 
-    // 2. Альтернативный метод через Bot API
+    // Метод 2: Через Bot API (резервный)
     try {
-        await fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                chat_id: tg.initDataUnsafe.user.id,
-                text: `Данные формы:\n${JSON.stringify(formData)}`
+                chat_id: tg.initDataUnsafe.user?.id,
+                text: `Form data:\n${JSON.stringify(formData, null, 2)}`
             })
         });
-        console.log('Данные отправлены через Bot API');
+        console.log('Data sent via Bot API', await response.json());
         return true;
     } catch (e) {
-        console.error('Ошибка Bot API:', e);
+        console.error('Bot API failed:', e);
     }
 
-    // 3. Резервный метод (только для десктопных версий)
-    if (tg.platform !== 'tdesktop') {
-        try {
-            window.open(`https://t.me/test3000_test_bot?start=${encodeURIComponent(JSON.stringify(formData))}`);
-            return true;
-        } catch (e) {
-            console.error('Ошибка открытия ссылки:', e);
-        }
+    // Метод 3: Крайний случай (для десктопных клиентов)
+    if (tg.platform === 'tdesktop') {
+        window.location.href = `https://t.me/${tg.initDataUnsafe.user?.username}?start=${encodeURIComponent(JSON.stringify(formData))}`;
+        return true;
     }
 
     return false;
@@ -54,18 +50,25 @@ document.getElementById('dataForm').addEventListener('submit', async (e) => {
     const formData = {
         name: document.getElementById('userName').value,
         email: document.getElementById('userEmail').value,
-        message: document.getElementById('userMessage').value
+        message: document.getElementById('userMessage').value,
+        _webApp: true,
+        _timestamp: Date.now()
     };
 
-    const success = await sendData(formData);
+    const success = await sendFormData(formData);
     
     if (success) {
         document.getElementById('formContainer').style.display = 'none';
         document.getElementById('successContainer').style.display = 'block';
-        setTimeout(() => tg.close(), 2000);
+        setTimeout(() => tg.close(), 3000);
     } else {
-        alert('Не удалось отправить данные. Попробуйте позже.');
+        alert('Failed to send data. Please try again later.');
     }
 });
 
-console.log('Init Data:', Telegram.WebApp.initDataUnsafe);
+// Инициализация
+console.log('WebApp initialized:', {
+    version: tg.version,
+    platform: tg.platform,
+    user: tg.initDataUnsafe.user
+});
