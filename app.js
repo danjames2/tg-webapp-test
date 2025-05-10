@@ -43,26 +43,32 @@ async function sendFormData(formData) {
     return false;
 }
 
-// Обработка формы
-document.getElementById('dataForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = {
-        name: document.getElementById('userName').value,
-        email: document.getElementById('userEmail').value,
-        message: document.getElementById('userMessage').value,
-        _webApp: true,
-        _timestamp: Date.now()
+document.getElementById('forceSend').addEventListener('click', () => {
+    const testData = {
+        test: "123",
+        _debug: true,
+        timestamp: Date.now()
     };
-
-    const success = await sendFormData(formData);
     
-    if (success) {
-        document.getElementById('formContainer').style.display = 'none';
-        document.getElementById('successContainer').style.display = 'block';
-        setTimeout(() => tg.close(), 3000);
-    } else {
-        alert('Failed to send data. Please try again later.');
+    // Все три метода отправки
+    try {
+        // 1. Основной метод
+        Telegram.WebApp.sendData(JSON.stringify(testData));
+        console.log('Sent via sendData()');
+        
+        // 2. Альтернативный метод
+        Telegram.WebApp.postEvent('web_app_data_send', {data: JSON.stringify(testData)});
+        
+        // 3. Резервный метод
+        fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
+            method: 'POST',
+            body: new URLSearchParams({
+                chat_id: Telegram.WebApp.initDataUnsafe.user.id,
+                text: `DEBUG: ${JSON.stringify(testData)}`
+            })
+        });
+    } catch (e) {
+        console.error('Force send failed:', e);
     }
 });
 
