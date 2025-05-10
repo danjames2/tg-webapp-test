@@ -1,10 +1,58 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>WebApp Test</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #testBtn { 
+            padding: 15px; 
+            background: #0088cc; 
+            color: white; 
+            border: none; 
+            border-radius: 5px;
+            font-size: 18px;
+        }
+    </style>
+</head>
 <body>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <button onclick="
-    Telegram.WebApp.sendData('{\"force_test\":1}');
-    Telegram.WebApp.close();
-  ">TEST SEND 3</button>
+    <button id="testBtn">ОТПРАВИТЬ ТЕСТОВЫЕ ДАННЫЕ</button>
+
+    <script>
+        // Инициализация
+        const tg = Telegram.WebApp;
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // Тестовая отправка
+        document.getElementById('testBtn').addEventListener('click', () => {
+            const testData = {
+                _test: true,
+                timestamp: Date.now(),
+                user_id: tg.initDataUnsafe.user?.id,
+                platform: tg.platform
+            };
+
+            try {
+                // Основной метод
+                tg.sendData(JSON.stringify(testData));
+                
+                // Резервный метод
+                fetch(`https://api.telegram.org/bot7392805578:AAH-1UwY07r8Z-Br98TegCfxgYV_fJTJsEM/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        chat_id: tg.initDataUnsafe.user?.id,
+                        text: `Резервная отправка:\n${JSON.stringify(testData, null, 2)}`
+                    })
+                });
+                
+                alert('Данные отправлены!');
+                tg.close();
+            } catch (e) {
+                alert(`Ошибка: ${e.message}`);
+            }
+        });
+    </script>
 </body>
 </html>
